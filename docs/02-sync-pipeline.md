@@ -18,6 +18,17 @@ a push to `main` that touches `**/*.md`, or manually via **Run workflow**.
 The workflow never uploads content. The API reads this repository over the GitHub
 API using its own credentials — the workflow only says "look now".
 
+## Two ways to trigger it
+
+| Trigger | Path |
+| --- | --- |
+| Push to this repo | `sync-blog.yml` → `POST /api/blog/sync` |
+| Signed-in admin on `/blog` | "Sync now" button → server action → same endpoint |
+
+The in-app button forwards the user's access token and injects `BLOG_SYNC_TOKEN`
+server-side, so the sync token never reaches the browser. It only renders for
+sessions carrying the realm role `admin`.
+
 ## Why not a self-hosted runner
 
 This repository is **public**. Running its workflow on the self-hosted runner
