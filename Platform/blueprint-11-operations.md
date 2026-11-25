@@ -151,9 +151,12 @@ rm -rf ~/actions-runner/_work/tmlabs-backend/tmlabs-backend/{gitops,chart}   # s
 
 ## Content pipeline
 
-Markdown lives in the `blog` repo. A push there runs `sync-blog.yml`, which
-authenticates to Keycloak as a service account, port-forwards to the gateway, and
-calls `POST /api/blog/sync`, then `POST /api/revalidate` on the public host.
+Markdown lives in the `blog` repo (public). A push there runs `sync-blog.yml` on a
+GitHub-hosted runner — **not** the self-hosted one, because a fork could execute
+code on your LAN. It authenticates to Keycloak as a service account and calls
+`POST https://blog-test.tiyiselani.com/api/blog/sync`, which the Ingress routes to
+the gateway ([08](https://github.com/TiyiselaniIndustries/tmlabs-backend/blob/main/docs/blueprint/08-networking-and-tls.md)), then
+`POST /api/revalidate` on the same host.
 
 Two auth requirements stack: the endpoint is `Roles("admin")` (so the token needs
 the realm role `admin`) **and** it compares a `syncToken` in the body against

@@ -67,7 +67,9 @@ Four repos, four responsibilities:
 3. **Secrets live in OpenBao, not in Git.** The chart's Secret templates are
    deleted before publishing; External Secrets fills the gap
    (see [07](https://github.com/TiyiselaniIndustries/tmlabs-backend/blob/main/docs/blueprint/07-configuration-and-secrets.md)).
-4. **The gateway stays private.** Only the frontend is published; the gateway is
-   a `ClusterIP` Service the Next server calls in-cluster.
+4. **The gateway is private, with one published path.** `/api/blog` is routed
+   from the public host so the content repo's workflow can call sync; everything
+   else (including `/api/chat`) stays cluster-internal. See
+   [08](https://github.com/TiyiselaniIndustries/tmlabs-backend/blob/main/docs/blueprint/08-networking-and-tls.md).
 5. **Runtime config over build-time config.** `API_URL` and `KEYCLOAK_*` are read
    per request so changing a URL doesn't require a rebuild.

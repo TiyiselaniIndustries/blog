@@ -8,8 +8,7 @@ step fails for a different reason, and the step name tells you which layer broke
 | Failing step | Layer | Look at |
 | --- | --- | --- |
 | *Get Keycloak token* | identity | client id/secret, realm, client enabled |
-| *Sync blog content* (before "Calling") | network / cluster | port-forward log printed on failure |
-| *Sync blog content* (at the curl) | auth or payload | HTTP status in the log |
+| *Sync blog content* | routing / auth / payload | the `HTTP <code>` line printed before the error |
 | *Revalidate site cache* | cache only | non-fatal; site refreshes on TTL |
 
 ## `401` from `/api/blog/sync`
@@ -63,32 +62,32 @@ The API reached GitHub and failed. `detail` in the response holds the message.
 | `401` from GitHub | `GitHub__Token` missing on a private repo, or expired |
 | `404` | wrong owner/repository/branch |
 
-## `404 page not found` on the curl
+## `404` on the curl
 
-The gateway did not match `/api/blog/sync`. Confirm the route exists:
+`/api/blog/sync` is not routed. Either the Ingress path rule is missing, or the
+pods behind it are gone. Check from a machine with `kubectl`:
 
 ```bash
+kubectl -n tmlabs get ingress tmlabs-web -o yaml | grep -A3 "/api/blog"
 kubectl -n tmlabs exec deploy/gateway-deployment -- \
   curl -sS http://127.0.0.1:8080/api/blog/health
+kubectl -n tmlabs get pods
 ```
 
-If that works, the request never reached the gateway — check the port-forward
-port in the log.
+If the gateway answers internally but the public call 404s, the Ingress path rule
+from `tmlabs-gitops/manifests/tmlabs-extras/ingress.yaml` hasn't been synced.
 
-## Port-forward fails
+## `502` / timeouts before the API answers
 
-| Message | Cause |
-| --- | --- |
-| `unable to forward ... address already in use` | a previous run left 18080 bound; reboot the runner or `kill` it |
-| `error: unable to upgrade connection` | the service or pods are gone |
-| `must be logged in to the server` | the runner's kubeconfig expired |
-
-Check what is actually running in the cluster:
+Cloudflare reaches the tunnel but the origin doesn't respond — the pods are down
+or Traefik has no endpoints:
 
 ```bash
 kubectl -n tmlabs get pods
-kubectl -n tmlabs get svc gateway-service
+kubectl -n tmlabs get endpoints gateway-service
 ```
+
+An empty `ENDPOINTS` list means the Service selects nothing.
 
 ## Content pushed but the site still shows the old version
 

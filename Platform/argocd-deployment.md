@@ -57,8 +57,12 @@ on `TiyiselaniIndustries/tmlabs-backend`:
 | `KEYCLOAK_CLIENT_ID` | `tmlabs-frontend` | Public client |
 | `GITOPS_PUSH_ENABLED` | `true` | Only after the checklist below |
 
-`API_BASE_URL` is **not** a public URL. The gateway stays `ClusterIP`; the Next
-server calls `http://gateway-service:8080`. Nothing in the browser bundle reads it.
+`API_BASE_URL` is **not** a public URL. The gateway Service stays `ClusterIP`; the
+Next server calls `http://gateway-service:8080`, and nothing in the browser bundle
+reads it. The only public gateway path is `/api/blog`, routed from the frontend
+host so the content repo's workflow can call `POST /api/blog/sync` — the endpoint
+requires an `admin` token and a sync token, so publishing the path does not
+publish the operation.
 
 Repository **secrets**:
 

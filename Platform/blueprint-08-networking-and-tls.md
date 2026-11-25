@@ -5,7 +5,7 @@ publishedAt: 2026-11-25T08:19:00Z
 draft: false
 ---
 
-One public hostname, one private service mesh.
+One public hostname, two paths, one private service mesh.
 
 ## The Ingress
 
@@ -22,20 +22,36 @@ spec:
     - host: blog-test.tiyiselani.com
       http:
         paths:
+          - path: /api/blog
+            pathType: Prefix
+            backend:
+              service: { name: gateway-service, port: { number: 8080 } }
           - path: /
             pathType: Prefix
             backend:
-              service:
-                name: web-service
-                port:
-                  number: 3000
+              service: { name: web-service, port: { number: 3000 } }
 ```
 
 No `ingressClassName` — the cluster's default (`traefik` on k3s) serves it. Add
 one explicitly if your cluster has no default.
 
-Only `web-service` is published. The gateway stays `ClusterIP` because the Next
-server calls it in-cluster.
+Longest prefix wins, so `/api/blog/*` reaches the gateway and everything else
+reaches the frontend.
+
+### Why `/api/blog` is public
+
+The blog content repository is **public**, so its workflow cannot run on the
+self-hosted runner — a fork could execute arbitrary code on your LAN. It runs on
+GitHub-hosted infrastructure instead, which means it needs an internet route to
+`POST /api/blog/sync`.
+
+Exposing that path does not expose the operation: the endpoint requires a Keycloak
+token with the realm role `admin` (audience `tmlabs-api`) **and** a matching
+`syncToken` in the body. The GET endpoints under the same prefix were already
+public content.
+
+What remains private: `/api/chat`, and the gateway itself as a Service. The Next
+server still reaches it in-cluster via `API_URL=http://gateway-service:8080`.
 
 ## Verify
 
@@ -44,9 +60,14 @@ kubectl -n tmlabs get ingress tmlabs-web        # ADDRESS should be filled in
 kubectl get ingressclass                        # traefik (default)
 curl -s -o /dev/null -w '%{http_code}\n' \
   -H 'Host: blog-test.tiyiselani.com' http://192.168.1.9/
+curl -s -o /dev/null -w '%{http_code}\n' \
+  -H 'Host: blog-test.tiyiselani.com' http://192.168.1.9/api/blog/health
 ```
 
-`200` proves Ingress → Service → pod works, before any DNS exists.
+`200` on the first proves Ingress → Service → web pod. `200` on the second proves
+the `/api/blog` path reaches the gateway before any DNS exists. An unauthenticated
+`POST /api/blog/sync` should return `401` — that is the correct answer.
+
 
 ## TLS: two options
 

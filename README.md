@@ -15,12 +15,16 @@ Each post carries front matter (`title`, `slug`, `description`, `author`,
 ## Publishing
 
 Pushing markdown to `main` runs
-[`.github/workflows/sync-blog.yml`](.github/workflows/sync-blog.yml), which:
+[`.github/workflows/sync-blog.yml`](.github/workflows/sync-blog.yml) on a GitHub-hosted
+runner, which:
 
 1. gets a Keycloak token for the `tmlabs-ci` service account,
-2. port-forwards to the in-cluster gateway (it is not publicly reachable),
-3. calls `POST /api/blog/sync` with the shared sync token,
-4. calls `POST /api/revalidate` on the public site so cached pages refresh.
+2. calls `POST https://blog-test.tiyiselani.com/api/blog/sync` with the shared
+   sync token (the Ingress routes that path to the gateway),
+3. calls `POST /api/revalidate` on the same host so cached pages refresh.
+
+This repo is public, so the workflow deliberately does **not** use a self-hosted
+runner: a fork could otherwise execute code inside the internal network.
 
 You can also run it by hand: **Actions → sync-blog → Run workflow**.
 
@@ -58,8 +62,7 @@ No browser flow is needed — the grant is `client_credentials`.
 
 ### Manual run
 
-`workflow_dispatch` on the workflow page, or locally from a machine that can
-reach the gateway:
+`workflow_dispatch` on the workflow page, or locally:
 
 ```bash
 TOKEN=$(curl -sS -X POST \
@@ -69,9 +72,7 @@ TOKEN=$(curl -sS -X POST \
   -d client_secret="$KEYCLOAK_CI_CLIENT_SECRET" \
   | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 
-kubectl -n tmlabs port-forward svc/gateway-service 18080:8080 &
-
-curl -sS -X POST http://127.0.0.1:18080/api/blog/sync \
+curl -sS -X POST https://blog-test.tiyiselani.com/api/blog/sync \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d "{\"syncToken\":\"$BLOG_SYNC_TOKEN\"}"

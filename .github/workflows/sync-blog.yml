@@ -2,9 +2,14 @@
 #
 # Pushes markdown into the TmLabs database and refreshes the public site cache.
 #
-# The sync endpoint (POST /api/blog/sync) is NOT publicly reachable: the gateway
-# Service is ClusterIP, so this job runs on the self-hosted runner (which has
-# kubectl) and port-forwards to it.
+# This repository is PUBLIC, so this job must NOT run on a self-hosted runner:
+# a fork could open a PR and execute arbitrary code on the internal network.
+# It runs on GitHub-hosted infrastructure and reaches the API over HTTPS at
+# https://blog-test.tiyiselani.com/api/blog/sync, which the Ingress routes to the
+# gateway (tmlabs-gitops/manifests/tmlabs-extras/ingress.yaml).
+#
+# That path is protected twice: the token needs the Keycloak realm role `admin`
+# (audience tmlabs-api), and the body must carry the shared syncToken.
 #
 # Required Keycloak setup (realm non-prod):
 #   client tmlabs-ci, confidential, service accounts enabled
@@ -29,18 +34,22 @@ on:
       - "**/*.md"
   workflow_dispatch:
 
+# No write access is needed: this workflow only calls external endpoints.
+permissions:
+  contents: read
+
 concurrency:
   group: sync-blog
   cancel-in-progress: false
 
 env:
   APP_URL: https://blog-test.tiyiselani.com
+  SYNC_URL: https://blog-test.tiyiselani.com/api/blog/sync
   KEYCLOAK_TOKEN_URL: https://auth.tiyiselani.com/realms/non-prod/protocol/openid-connect/token
-  GATEWAY_LOCAL_PORT: "18080"
 
 jobs:
   sync:
-    runs-on: [self-hosted, linux]
+    runs-on: ubuntu-latest
     steps:
       - name: Get Keycloak token
         id: auth
@@ -83,36 +92,32 @@ jobs:
             *'"'*|*'\'*) echo "::error::BLOG_SYNC_TOKEN must not contain quotes or backslashes."; exit 1 ;;
           esac
 
-          cleanup() {
-            if [ -n "${PF_PID:-}" ]; then kill "$PF_PID" 2>/dev/null || true; fi
-          }
-          trap cleanup EXIT
-
-          kubectl -n tmlabs port-forward svc/gateway-service "${GATEWAY_LOCAL_PORT}:8080" \
-            >/tmp/port-forward.log 2>&1 &
-          PF_PID=$!
-
-          for _ in $(seq 1 30); do
-            if curl -fsS "http://127.0.0.1:${GATEWAY_LOCAL_PORT}/health" >/dev/null 2>&1; then
-              break
-            fi
-            sleep 1
-          done
-          if ! curl -fsS "http://127.0.0.1:${GATEWAY_LOCAL_PORT}/health" >/dev/null 2>&1; then
-            echo "::error::Gateway did not become reachable through port-forward."
-            cat /tmp/port-forward.log
-            exit 1
-          fi
-
           body=$(printf '{"syncToken":"%s","owner":"%s","repository":"%s","branch":"%s"}' \
             "$SYNC_TOKEN" "${REPO_OWNER:-TiyiselaniIndustries}" "${REPO_NAME:-blog}" "${REPO_BRANCH:-main}")
 
-          echo "Calling POST /api/blog/sync"
-          curl -fsS -X POST "http://127.0.0.1:${GATEWAY_LOCAL_PORT}/api/blog/sync" \
+          echo "Calling POST $SYNC_URL"
+          # --retry covers a cold Cloudflare/Traefik hop. No --fail so that the
+          # API's error body is captured and printed for the status mapping below.
+          code=$(curl -sS -o /tmp/sync-response.txt -w '%{http_code}' \
+            --retry 3 --retry-delay 5 --retry-all-errors \
+            -X POST "$SYNC_URL" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d "$body" | tee /tmp/sync-result.json
-          echo
+            -d "$body")
+
+          echo "HTTP $code"
+          cat /tmp/sync-response.txt; echo
+
+          if [ "$code" != "200" ]; then
+            case "$code" in
+              401) echo "::error::401 — rejected. Either the token lacks the admin role / tmlabs-api audience, or BLOG_SYNC_TOKEN does not match GitHub__SyncToken." ;;
+              403) echo "::error::403 — token is valid but lacks the admin role." ;;
+              404) echo "::error::404 — /api/blog/sync not routed. Check the Ingress path rule and that the pods exist." ;;
+              502) echo "::error::502 — the API reached GitHub and failed; see detail above." ;;
+              *)   echo "::error::$code — unexpected response." ;;
+            esac
+            exit 1
+          fi
 
       - name: Revalidate site cache
         if: success()

@@ -7,7 +7,7 @@ a push to `main` that touches `**/*.md`, or manually via **Run workflow**.
 
 ```
 1. client_credentials  → Keycloak          get an access_token
-2. kubectl port-forward → gateway-service  reach the private gateway
+2. HTTPS POST to the public host  →  /api/blog path rule  →  gateway
 3. POST /api/blog/sync (Bearer + syncToken)
       gateway  → PathRemovePrefix /api/blog → blogapi /sync
       blogapi  → GitHub API: repo tree, blobs
@@ -18,21 +18,27 @@ a push to `main` that touches `**/*.md`, or manually via **Run workflow**.
 The workflow never uploads content. The API reads this repository over the GitHub
 API using its own credentials — the workflow only says "look now".
 
-## Why port-forward
+## Why not a self-hosted runner
 
-The gateway Service is `ClusterIP`, deliberately: only the Next.js frontend is
-published, and it calls the gateway in-cluster. From the internet there is no
-route, so a GitHub-hosted runner cannot reach `/api/blog/sync`.
+This repository is **public**. Running its workflow on the self-hosted runner
+would let a fork open a pull request and execute arbitrary code inside your
+network — so the job runs on `ubuntu-latest` instead.
 
-The self-hosted runner sits on the same network and has `kubectl`, so it
-port-forwards instead of exposing anything:
+That means it needs an internet route to the sync endpoint. The gateway Service is
+still `ClusterIP`; the Ingress instead publishes exactly one path on the frontend
+host:
 
-```bash
-kubectl -n tmlabs port-forward svc/gateway-service 18080:8080 &
+```
+blog-test.tiyiselani.com/api/blog  →  gateway-service:8080
+blog-test.tiyiselani.com/          →  web-service:3000
 ```
 
-The step waits for `/health` before calling, and kills the forward via `trap` on
-exit so a failed run doesn't leave a port bound on the runner.
+Longest prefix wins, so `/api/blog/*` reaches the gateway and everything else
+reaches the frontend. `/api/chat` stays unreachable from outside.
+
+Exposing the path does not expose the operation: the endpoint still requires a
+token with the realm role `admin` and a matching `syncToken`. An unauthenticated
+`POST` returns `401`, which is the correct answer.
 
 ## Two credentials, both required
 

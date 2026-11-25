@@ -6,7 +6,7 @@ How content moves from this repository into the TmLabs database and onto the sit
 | --- | --- |
 | [01-authoring.md](01-authoring.md) | File layout, front matter, drafts, what the parser accepts |
 | [02-sync-pipeline.md](02-sync-pipeline.md) | What runs on push, the auth chain, the workflow internals |
-| [03-troubleshooting.md](03-troubleshooting.md) | Interpreting failures: 401, 403, 502, cache, port-forward |
+| [03-troubleshooting.md](03-troubleshooting.md) | Interpreting failures: 401, 403, 404, 502, cache |
 
 The wider application (Kubernetes, Argo CD, secrets, keycloak) is documented in
 the backend repo: `tmlabs-backend/docs/blueprint/`. These files only cover the
