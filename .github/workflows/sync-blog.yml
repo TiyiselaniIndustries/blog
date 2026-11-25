@@ -1,0 +1,130 @@
+# tmlabs-blog/.github/workflows/sync-blog.yml
+#
+# Pushes markdown into the TmLabs database and refreshes the public site cache.
+#
+# The sync endpoint (POST /api/blog/sync) is NOT publicly reachable: the gateway
+# Service is ClusterIP, so this job runs on the self-hosted runner (which has
+# kubectl) and port-forwards to it.
+#
+# Required Keycloak setup (realm non-prod):
+#   client tmlabs-ci, confidential, service accounts enabled
+#   - service account assigned the realm role `admin`
+#   - audience mapper adding `tmlabs-api` to the access token
+#     (BlogApi validates aud = tmlabs-api)
+#
+# Required on this repo:
+#   variable KEYCLOAK_CI_CLIENT_ID        e.g. tmlabs-ci
+#   secret   KEYCLOAK_CI_CLIENT_SECRET
+#   secret   BLOG_SYNC_TOKEN              must equal GitHub__SyncToken in OpenBao
+#   secret   REVALIDATE_SECRET            must equal web-secrets / REVALIDATE_SECRET
+#
+# Optional variables (default to the BlogApi appsettings values when unset):
+#   BLOG_REPO_OWNER, BLOG_REPO_NAME, BLOG_REPO_BRANCH
+name: sync-blog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.md"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-blog
+  cancel-in-progress: false
+
+env:
+  APP_URL: https://blog-test.tiyiselani.com
+  KEYCLOAK_TOKEN_URL: https://auth.tiyiselani.com/realms/non-prod/protocol/openid-connect/token
+  GATEWAY_LOCAL_PORT: "18080"
+
+jobs:
+  sync:
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Get Keycloak token
+        id: auth
+        env:
+          CLIENT_ID: ${{ vars.KEYCLOAK_CI_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.KEYCLOAK_CI_CLIENT_SECRET }}
+        run: |
+          if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
+            echo "::error::Set variable KEYCLOAK_CI_CLIENT_ID and secret KEYCLOAK_CI_CLIENT_SECRET."
+            exit 1
+          fi
+          response=$(curl -fsS -X POST "$KEYCLOAK_TOKEN_URL" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=client_credentials" \
+            --data-urlencode "client_id=$CLIENT_ID" \
+            --data-urlencode "client_secret=$CLIENT_SECRET")
+          token=$(printf '%s' "$response" \
+            | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+          if [ -z "$token" ]; then
+            echo "::error::Keycloak did not return an access_token. Check the client configuration."
+            exit 1
+          fi
+          echo "::add-mask::$token"
+          printf 'token=%s\n' "$token" >> "$GITHUB_OUTPUT"
+
+      - name: Sync blog content
+        env:
+          TOKEN: ${{ steps.auth.outputs.token }}
+          SYNC_TOKEN: ${{ secrets.BLOG_SYNC_TOKEN }}
+          REPO_OWNER: ${{ vars.BLOG_REPO_OWNER }}
+          REPO_NAME: ${{ vars.BLOG_REPO_NAME }}
+          REPO_BRANCH: ${{ vars.BLOG_REPO_BRANCH }}
+        run: |
+          if [ -z "$SYNC_TOKEN" ]; then
+            echo "::error::BLOG_SYNC_TOKEN is not set; it must match GitHub__SyncToken in the cluster."
+            exit 1
+          fi
+          # The token goes into a hand-built JSON body, so keep it simple.
+          case "$SYNC_TOKEN" in
+            *'"'*|*'\'*) echo "::error::BLOG_SYNC_TOKEN must not contain quotes or backslashes."; exit 1 ;;
+          esac
+
+          cleanup() {
+            if [ -n "${PF_PID:-}" ]; then kill "$PF_PID" 2>/dev/null || true; fi
+          }
+          trap cleanup EXIT
+
+          kubectl -n tmlabs port-forward svc/gateway-service "${GATEWAY_LOCAL_PORT}:8080" \
+            >/tmp/port-forward.log 2>&1 &
+          PF_PID=$!
+
+          for _ in $(seq 1 30); do
+            if curl -fsS "http://127.0.0.1:${GATEWAY_LOCAL_PORT}/health" >/dev/null 2>&1; then
+              break
+            fi
+            sleep 1
+          done
+          if ! curl -fsS "http://127.0.0.1:${GATEWAY_LOCAL_PORT}/health" >/dev/null 2>&1; then
+            echo "::error::Gateway did not become reachable through port-forward."
+            cat /tmp/port-forward.log
+            exit 1
+          fi
+
+          body=$(printf '{"syncToken":"%s","owner":"%s","repository":"%s","branch":"%s"}' \
+            "$SYNC_TOKEN" "${REPO_OWNER:-TiyiselaniIndustries}" "${REPO_NAME:-blog}" "${REPO_BRANCH:-main}")
+
+          echo "Calling POST /api/blog/sync"
+          curl -fsS -X POST "http://127.0.0.1:${GATEWAY_LOCAL_PORT}/api/blog/sync" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$body" | tee /tmp/sync-result.json
+          echo
+
+      - name: Revalidate site cache
+        if: success()
+        env:
+          SECRET: ${{ secrets.REVALIDATE_SECRET }}
+        run: |
+          if [ -z "$SECRET" ]; then
+            echo "::warning::REVALIDATE_SECRET not set; pages will refresh when the cache TTL expires."
+            exit 0
+          fi
+          curl -fsS -X POST "$APP_URL/api/revalidate" \
+            -H "x-revalidate-secret: $SECRET" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+          echo
