@@ -1,7 +1,9 @@
 ---
 title: Technical Auth Stack and Flow
 description: This document describes the recommended implementation for a public-facing app with
-publishedAt: 2026-11-25T08:04:00Z
+series: Identity and access
+seriesOrder: 2
+publishedAt: 2026-11-25T08:16:00Z
 draft: false
 ---
 

@@ -1,7 +1,9 @@
 ---
 title: 12. New app checklist
 description: Use this to spin up a second app from the same pattern. Ordered by dependency
-publishedAt: 2026-11-25T08:23:00Z
+series: Deployment blueprint
+seriesOrder: 13
+publishedAt: 2026-11-25T08:12:00Z
 draft: false
 ---
 

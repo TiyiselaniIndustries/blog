@@ -1,7 +1,9 @@
 ---
 title: 3. Images and registry
 description: Five images ship: three .NET services, the frontend, and (originally) the Aspire
-publishedAt: 2026-11-25T08:14:00Z
+series: Deployment blueprint
+seriesOrder: 4
+publishedAt: 2026-11-25T08:03:00Z
 draft: false
 ---
 

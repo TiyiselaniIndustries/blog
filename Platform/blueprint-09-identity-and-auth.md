@@ -1,7 +1,9 @@
 ---
 title: 9. Identity and auth
 description: Auth.js (NextAuth v5) on the frontend, Keycloak as the OIDC provider, JWT
-publishedAt: 2026-11-25T08:20:00Z
+series: Deployment blueprint
+seriesOrder: 10
+publishedAt: 2026-11-25T08:09:00Z
 draft: false
 ---
 

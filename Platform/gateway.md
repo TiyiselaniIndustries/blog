@@ -1,7 +1,9 @@
 ---
 title: API Gateway
 description: This project uses a YARP-based gateway so the frontend and clients can talk to a single entry point instead of calling each service directly.
-publishedAt: 2026-11-25T08:01:00Z
+series: API and gateway
+seriesOrder: 1
+publishedAt: 2026-11-25T08:13:00Z
 draft: false
 ---
 

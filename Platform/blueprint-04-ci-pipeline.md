@@ -1,7 +1,9 @@
 ---
 title: 4. CI pipeline
 description: concurrency: deploy-test with cancel-in-progress: false — a second push
-publishedAt: 2026-11-25T08:15:00Z
+series: Deployment blueprint
+seriesOrder: 5
+publishedAt: 2026-11-25T08:04:00Z
 draft: false
 ---
 

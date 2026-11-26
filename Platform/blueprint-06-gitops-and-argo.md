@@ -1,7 +1,9 @@
 ---
 title: 6. GitOps and Argo CD
 description: CI never touches the cluster. It commits a chart; Argo CD notices and applies it.
-publishedAt: 2026-11-25T08:17:00Z
+series: Deployment blueprint
+seriesOrder: 7
+publishedAt: 2026-11-25T08:06:00Z
 draft: false
 ---
 

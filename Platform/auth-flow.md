@@ -1,7 +1,9 @@
 ---
 title: Authentication and Authorization Flow
 description: This project is designed around a public frontend, a gateway, and multiple backend services. The recommended architecture is
-publishedAt: 2026-11-25T08:03:00Z
+series: Identity and access
+seriesOrder: 1
+publishedAt: 2026-11-25T08:15:00Z
 draft: false
 ---
 

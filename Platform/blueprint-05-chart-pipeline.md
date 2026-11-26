@@ -1,7 +1,9 @@
 ---
 title: 5. Chart pipeline
 description: aspire publish turns the AppHost into a Helm chart. Its output is a starting
-publishedAt: 2026-11-25T08:16:00Z
+series: Deployment blueprint
+seriesOrder: 6
+publishedAt: 2026-11-25T08:05:00Z
 draft: false
 ---
 

@@ -1,7 +1,9 @@
 ---
 title: User Linking and Database Setup
 description: This guide connects Keycloak identities to TmLabs application users and sets up the PostgreSQL database used by the Blog API and Chat Service.
-publishedAt: 2026-11-25T08:09:00Z
+series: Identity and access
+seriesOrder: 6
+publishedAt: 2026-11-25T08:20:00Z
 draft: false
 ---
 

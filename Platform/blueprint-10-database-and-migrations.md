@@ -1,7 +1,9 @@
 ---
 title: 10. Database and migrations
 description: PostgreSQL is not provisioned by this chart. Both services connect to an
-publishedAt: 2026-11-25T08:21:00Z
+series: Deployment blueprint
+seriesOrder: 11
+publishedAt: 2026-11-25T08:10:00Z
 draft: false
 ---
 

@@ -1,7 +1,9 @@
 ---
 title: Keycloak Authentication, Scalar Setup, and .NET Integration for TmLabs
 description: This guide covers identity setup in Keycloak, wiring the TmLabs gateway and services to validate tokens, testing with Scalar, and linking authenticate...
-publishedAt: 2026-11-25T08:06:00Z
+series: Identity and access
+seriesOrder: 4
+publishedAt: 2026-11-25T08:18:00Z
 draft: false
 ---
 

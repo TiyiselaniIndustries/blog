@@ -1,7 +1,9 @@
 ---
 title: Deployment blueprint: overview
 description: A step-by-step record of how TmLabs goes from source code to a running app on
-publishedAt: 2026-11-25T08:11:00Z
+series: Deployment blueprint
+seriesOrder: 1
+publishedAt: 2026-11-25T08:00:00Z
 draft: false
 ---
 

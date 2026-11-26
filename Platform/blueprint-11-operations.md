@@ -1,7 +1,9 @@
 ---
 title: 11. Operations
 description: /api/health is deliberately dependency-free: wiring readiness to the gateway
-publishedAt: 2026-11-25T08:22:00Z
+series: Deployment blueprint
+seriesOrder: 12
+publishedAt: 2026-11-25T08:11:00Z
 draft: false
 ---
 

@@ -1,7 +1,9 @@
 ---
 title: 7. Configuration and secrets
 description: The hardest part to get right, because three different mechanisms look similar and
-publishedAt: 2026-11-25T08:18:00Z
+series: Deployment blueprint
+seriesOrder: 8
+publishedAt: 2026-11-25T08:07:00Z
 draft: false
 ---
 
@@ -37,7 +39,8 @@ empty Keycloak base produces the issuer `/realms/`, and every sign-in fails with
 
 | Secret | Keys | Consumer |
 | --- | --- | --- |
-| `web-secrets` | `AUTH_SECRET`, `REVALIDATE_SECRET` | `web-deployment` |
+| `web-secrets` | `AUTH_SECRET`, `REVALIDATE_SECRET`, `BLOG_SYNC_TOKEN` | `web-deployment` |
+| `web-secrets` | `S3_ACCESS_KEY`, `S3_SECRET_KEY` | `web-deployment` (avatar upload) |
 | `blogapi-secrets` | `ConnectionStrings__tmlabs_db`, `GitHub__SyncToken` | `blogapi-deployment` |
 | `chatservice-secrets` | `ConnectionStrings__tmlabs_db` | `chatservice-deployment` |
 

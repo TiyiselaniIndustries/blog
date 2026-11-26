@@ -1,7 +1,9 @@
 ---
 title: FastEndpoints Setup Guide
 description: This project uses FastEndpoints for API endpoint development in TmLabs.BlogApi and TmLabs.ChatService.
-publishedAt: 2026-11-25T08:02:00Z
+series: API and gateway
+seriesOrder: 2
+publishedAt: 2026-11-25T08:14:00Z
 draft: false
 ---
 

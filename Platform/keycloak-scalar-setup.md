@@ -1,7 +1,9 @@
 ---
 title: Keycloak Authentication and Scalar Setup
 description: This guide adapts the Keycloak and Scalar approach to the TmLabs backend.
-publishedAt: 2026-11-25T08:07:00Z
+series: Identity and access
+seriesOrder: 3
+publishedAt: 2026-11-25T08:17:00Z
 draft: false
 ---
 

@@ -1,7 +1,9 @@
 ---
 title: Deploying TmLabs to Kubernetes with Argo CD
 description: End-to-end reference for the test environment: what CI produces, what Argo CD
-publishedAt: 2026-11-25T08:10:00Z
+series: Platform operations
+seriesOrder: 1
+publishedAt: 2026-11-25T08:22:00Z
 draft: false
 ---
 
@@ -139,7 +141,7 @@ Names and keys must match exactly or the pods start without configuration:
 
 | Secret | Keys | Required because |
 | --- | --- | --- |
-| `web-secrets` | `AUTH_SECRET`, `REVALIDATE_SECRET` | Session cookie encryption; the revalidate endpoint fails closed without the second |
+| `web-secrets` | `AUTH_SECRET`, `REVALIDATE_SECRET`, `BLOG_SYNC_TOKEN` | Session cookie encryption; revalidate endpoint fails closed without the second; the site's "Sync now" form needs the third |
 | `blogapi-secrets` | `ConnectionStrings__tmlabs_db`, `GitHub__SyncToken` | **BlogApi throws at startup** without `GitHub:SyncToken` |
 | `chatservice-secrets` | `ConnectionStrings__tmlabs_db` | ChatService throws at startup without a connection string |
 

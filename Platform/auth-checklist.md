@@ -1,7 +1,9 @@
 ---
 title: TmLabs Authentication Checklist
 description: [ ] Keycloak owns users, passwords, passkeys, social login, sessions, and tokens.
-publishedAt: 2026-11-25T08:05:00Z
+series: Identity and access
+seriesOrder: 7
+publishedAt: 2026-11-25T08:21:00Z
 draft: false
 ---
 

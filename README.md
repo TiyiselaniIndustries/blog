@@ -86,13 +86,29 @@ The response reports `commitSha`, `changed`, `unpublished`, `skipped`.
 - [docs/02-sync-pipeline.md](docs/02-sync-pipeline.md) — what a push triggers, the auth chain
 - [docs/03-troubleshooting.md](docs/03-troubleshooting.md) — reading a failed run
 
-## Themes
+## Themes and structure
 
 | Folder | Contents |
 | --- | --- |
-| `Platform/` | TmLabs platform notes: gateway, auth, Keycloak, Argo CD, and the deployment blueprint series |
+| `Platform/` | TmLabs platform notes, including `welcome.md` (pinned) and four series |
 | `Coding/` | general engineering posts |
 | `Archery/` | non-technical posts |
+
+Posts belong to a **series** (`series` + `seriesOrder`), which `/blog` renders as
+an ordered section with `Part N` badges and previous/next navigation:
+
+| Series | Parts |
+| --- | --- |
+| Deployment blueprint | 13 |
+| API and gateway | 2 |
+| Identity and access | 7 |
+| Platform operations | 2 |
+
+Groups are ordered by the publication date of their earliest post, so the order is
+controlled by the export script's table, not alphabetically.
+
+A post with `pinned: true` renders above everything else. See
+[docs/01-authoring.md](docs/01-authoring.md).
 
 `Platform/` was generated from `tmlabs-backend/docs/`; posts there have their title
 as front matter and their source links rewritten to GitHub, because the original

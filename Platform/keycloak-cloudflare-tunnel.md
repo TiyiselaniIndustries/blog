@@ -1,7 +1,9 @@
 ---
 title: Exposing Keycloak (Proxmox LXC) Through Cloudflare Tunnel
 description: This guide assumes cloudflared is already installed and authenticated to your Cloudflare account, and that Keycloak is running in a Proxmox LXC on you...
-publishedAt: 2026-11-25T08:08:00Z
+series: Identity and access
+seriesOrder: 5
+publishedAt: 2026-11-25T08:19:00Z
 draft: false
 ---
 

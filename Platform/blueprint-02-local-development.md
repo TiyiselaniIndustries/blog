@@ -1,7 +1,9 @@
 ---
 title: 2. Local development
 description: Everything that deploys exists first as something that runs on a laptop. Get this
-publishedAt: 2026-11-25T08:13:00Z
+series: Deployment blueprint
+seriesOrder: 3
+publishedAt: 2026-11-25T08:02:00Z
 draft: false
 ---
 

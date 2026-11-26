@@ -1,7 +1,9 @@
 ---
 title: 1. Architecture
 description: The browser never talks to the gateway. All API traffic is server-side
-publishedAt: 2026-11-25T08:12:00Z
+series: Deployment blueprint
+seriesOrder: 2
+publishedAt: 2026-11-25T08:01:00Z
 draft: false
 ---
 

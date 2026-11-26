@@ -1,7 +1,9 @@
 ---
 title: 8. Networking and TLS
 description: No ingressClassName — the clusters default (traefik on k3s) serves it. Add
-publishedAt: 2026-11-25T08:19:00Z
+series: Deployment blueprint
+seriesOrder: 9
+publishedAt: 2026-11-25T08:08:00Z
 draft: false
 ---
 
